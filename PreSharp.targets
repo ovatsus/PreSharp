@@ -1,0 +1,65 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+    <ItemGroup>
+        <AvailableItemName Include="PreSharpInput">
+            <Visible>false</Visible>
+        </AvailableItemName>
+        <AvailableItemName Include="PreSharpInPlace">
+            <Visible>false</Visible>
+        </AvailableItemName>
+        <AvailableItemName Include="PreSharpTemplate">
+            <Visible>false</Visible>
+        </AvailableItemName>
+        <AvailableItemName Include="PreSharpTemplateLibrary">
+            <Visible>false</Visible>
+        </AvailableItemName>
+    </ItemGroup>
+
+    <UsingTask TaskName="PreSharp.Task" AssemblyFile="$(ProgramFiles)\PreSharp\PreSharp.exe" Condition=" '$(DISABLE_PRESHARP)' == '' " />
+
+    <PropertyGroup Condition=" '$(DISABLE_PRESHARP)' == '' ">
+        <BuildDependsOn>
+            PreSharpBuildTarget;
+            $(BuildDependsOn)
+        </BuildDependsOn>
+    </PropertyGroup>
+
+    <PropertyGroup Condition=" '$(DISABLE_PRESHARP)' == '' ">
+        <CleanDependsOn>
+            PreSharpCleanTarget;
+            $(CleanDependsOn)
+        </CleanDependsOn>
+    </PropertyGroup>
+
+    <Target Name="PreSharpCalculateInputsTarget" 
+            DependsOnTargets="BuiltProjectOutputGroupDependencies">
+        <CreateProperty Value="@(PreSharpInPlace->'%(FullPath)');@(PreSharpTemplate->'%(FullPath)');@(PreSharpTemplateLibrary->'%(FullPath)');@(PreSharpInput->'%(FullPath)')">
+            <Output TaskParameter="Value" PropertyName="PreSharpInputs"/>
+        </CreateProperty>
+        <CreateProperty Condition=" '$(PreSharpInputs)' != '' " Value="$(PreSharpInputs);@(BuiltProjectOutputGroupDependency->'%(FullPath)')">
+            <Output TaskParameter="Value" PropertyName="PreSharpInputs"/>
+        </CreateProperty>
+    </Target>
+
+    <Target Name="PreSharpBuildTarget"
+            DependsOnTargets="PreSharpCalculateInputsTarget;BuiltProjectOutputGroupDependencies"
+            Inputs="$(PreSharpInputs)"
+            Outputs="PreSharp.timestamp"            
+            Condition=" '$(DISABLE_PRESHARP)' == '' ">
+        <PreSharp.Task DefineConstants="$(DefineConstants)"
+                       DependencyPaths="@(BuiltProjectOutputGroupDependency)"
+                       InPlaceFiles="@(PreSharpInPlace)"
+                       TemplateFiles="@(PreSharpTemplate)"
+                       TemplateLibraryFiles="@(PreSharpTemplateLibrary)">
+            <Output TaskParameter="FilesToCompile" ItemName="Compile" />
+            <Output TaskParameter="FilesToCleanup" ItemName="FilesToCleanup" />
+        </PreSharp.Task>
+        <Delete Files="@(FilesToCleanup)"/>
+    </Target>
+
+    <Target Name="PreSharpCleanTarget">
+        <Delete Files="PreSharp.timestamp"/>
+        <Delete Files="@(PreSharpTemplate->'%(FullPath).PreSharpDebug.cs');@(PreSharpTemplateLibrary->'%(FullPath).PreSharpDebug.cs')"/>
+    </Target>
+
+</Project>
