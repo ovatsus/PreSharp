@@ -1,0 +1,5 @@
+PreSharp is a source code preprocessor for C#, that also doubles as template based source code generator.
+
+It was initially based on Eric Parker's C# Source Code Generator (http://web.archive.org/web/20060726075638/http://www.inmetrix.com/) but the functionally evolved into a full-fledged template driven generator, similar to CodeSmith and others. 
+
+For more information check http://blog.codebeside.org/Tags/PreSharp/
