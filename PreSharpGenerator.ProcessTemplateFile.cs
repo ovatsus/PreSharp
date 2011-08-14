@@ -1,23 +1,3 @@
-//Copyright (c) 2008 Gustavo Guerra
-
-//Permission is hereby granted, free of charge, to any person obtaining a copy
-//of this software and associated documentation files (the "Software"), to deal
-//in the Software without restriction, including without limitation the rights
-//to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-//copies of the Software, and to permit persons to whom the Software is
-//furnished to do so, subject to the following conditions:
-
-//The above copyright notice and this permission notice shall be included in
-//all copies or substantial portions of the Software.
-
-//THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-//IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-//AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-//LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-//THE SOFTWARE.
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -27,14 +7,17 @@ using System.Text.RegularExpressions;
 
 partial class PreSharpGenerator {
 
+    private static Regex includesRegex = new Regex("(\\s*)<%@\\s*Include\\s+Path=\"([^\"]+)\"\\s*%>(\\s*)", RegexOptions.Compiled);
+    private static Regex entryPointRegex = new Regex("(\\s*)<%@\\s*EntryPoint\\s+Statement=\"([^\"]+)\"\\s*%>(\\s*)", RegexOptions.Compiled);
+
     private void processTemplateFile(string templateFile,
                                      string templateFileCode,
+                                     IEnumerable<string> templateIncludeFiles,
                                      List<string> compileGeneratedFiles,
                                      List<string> embeddedResourceGeneratedFiles) {
         int lineNumberDelta = -1;
         string entryPoint = null;
 
-        Regex entryPointRegex = new Regex("(\\s*)<%@\\s*EntryPoint\\s+Statement=\"([^\"]+)\"\\s*%>(\\s*)");
         MatchCollection matches = entryPointRegex.Matches(templateFileCode);
 
         if (matches.Count == 1) {
@@ -57,11 +40,14 @@ partial class PreSharpGenerator {
         fileEnds.Add(templateFileCode.ToCharArray().Count(c => c == '\n'));
         fileNames.Add(templateFile);
 
-        Regex includesRegex = new Regex("(\\s*)<%@\\s*Include\\s+Path=\"([^\"]+)\"\\s*%>(\\s*)");
         var includeMatches = includesRegex.Matches(templateFileCode);
         templateFileCode = includesRegex.Replace(templateFileCode, string.Empty);
         foreach (Match m in includeMatches) {
-            string path = m.Groups[2].Value;
+            var pathGroup = m.Groups[2];
+            string path = pathGroup.Value.Replace("\\\\", "\\");
+            if (!templateIncludeFiles.Contains(path)) {
+                logger.LogWarning(path, null, "Build Action should be set to PreSharpTemplateInclude", 0, 0);
+            }
             lineNumberDelta += m.Groups[1].Value.ToCharArray().Count(c => c == '\n');
             lineNumberDelta += m.Groups[3].Value.ToCharArray().Count(c => c == '\n');
             string includedFile = File.ReadAllText(path);
@@ -110,11 +96,9 @@ partial class PreSharpGenerator {
                                                                          "PreSharp.Writer",
                                                                          out templateLibraryCode);
             
-            if (debugMode) {
-                string processedTemplateFile = templateFile + ".PreSharpDebug.cs";
-                File.WriteAllText(processedTemplateFile, templateLibraryCode);
-                logger.LogMessage("Generated debug file '" + processedTemplateFile + "'.");
-            }
+            string processedTemplateFile = templateFile + ".PreSharpDebug.cs";
+            File.WriteAllText(processedTemplateFile, templateLibraryCode);
+            logger.LogMessage("Generated debug file '" + processedTemplateFile + "'.");
 
             if (generatedAssembly == null) {
                 return;
@@ -124,12 +108,12 @@ partial class PreSharpGenerator {
                 Type generatedClassType = generatedAssembly.GetType(generatedClassName);
                 generatedClassType.GetMethod("DumpOutput", BindingFlags.Static | BindingFlags.NonPublic).Invoke(null, null);
 
-                List<string> compileGeneratedFilesFromThisTemplate = PreSharp.CompileGeneratedFiles;
-                List<string> embeddedResourceGeneratedFilesFromThisTemplate = PreSharp.EmbeddedResourceGeneratedFiles;
-
-                if (compileGeneratedFilesFromThisTemplate.Count == 0 && embeddedResourceGeneratedFilesFromThisTemplate.Count == 0) {
+                if (!PreSharp.HasOutputs) {
                     logger.LogError(templateFile, null, "At least one template output must be specified by using PreSharp.SetOutput(string outputFile, PreSharp.OutputType outputType)", 0, 0);
                 } else {
+                    List<string> compileGeneratedFilesFromThisTemplate = PreSharp.CompileGeneratedFiles;
+                    List<string> embeddedResourceGeneratedFilesFromThisTemplate = PreSharp.EmbeddedResourceGeneratedFiles;
+
                     foreach (string compileGeneratedFile in compileGeneratedFilesFromThisTemplate) {
                         logger.LogMessage("Generated file '" + compileGeneratedFile + "' from template '" + templateFile + "'.");
                         compileGeneratedFiles.Add(compileGeneratedFile);

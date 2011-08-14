@@ -10,14 +10,15 @@
         <AvailableItemName Include="PreSharpTemplate">
             <Visible>false</Visible>
         </AvailableItemName>
+        <AvailableItemName Include="PreSharpTemplateInclude">
+            <Visible>false</Visible>
+        </AvailableItemName>                
         <AvailableItemName Include="PreSharpTemplateLibrary">
             <Visible>false</Visible>
         </AvailableItemName>
     </ItemGroup>
 
     <UsingTask TaskName="PreSharpBuildTask" AssemblyFile="$(ProgramFiles)\PreSharp\PreSharp.exe" Condition=" '$(DISABLE_PRESHARP)' == '' " />
-    <UsingTask TaskName="PreSharpAddCompileGeneratedFilesTask" AssemblyFile="$(ProgramFiles)\PreSharp\PreSharp.exe" Condition=" '$(DISABLE_PRESHARP)' == '' " />
-    <UsingTask TaskName="PreSharpAddEmbeddedResourceGeneratedFilesTask" AssemblyFile="$(ProgramFiles)\PreSharp\PreSharp.exe" Condition=" '$(DISABLE_PRESHARP)' == '' " />
 
     <PropertyGroup Condition=" '$(DISABLE_PRESHARP)' == '' ">
         <BuildDependsOn>
@@ -49,11 +50,11 @@
 
     <Target Name="PreSharpCalculateInputsTarget"
             DependsOnTargets="BuiltProjectOutputGroupDependencies">
-        <CreateProperty Value="@(PreSharpInPlace->'%(FullPath)');@(PreSharpTemplate->'%(FullPath)');@(PreSharpTemplateLibrary->'%(FullPath)');@(PreSharpInput->'%(FullPath)')">
-            <Output TaskParameter="Value" PropertyName="PreSharpInputs"/>
+        <CreateProperty Value="@(PreSharpInPlace->'%(FullPath)');@(PreSharpTemplate->'%(FullPath)');@(PreSharpTemplateLibrary->'%(FullPath)');@(PreSharpTemplateInclude->'%(FullPath)');@(PreSharpInput->'%(FullPath)')">
+            <Output TaskParameter="Value" PropertyName="PreSharpInputs" />
         </CreateProperty>
         <CreateProperty Condition=" '$(PreSharpInputs)' != '' " Value="$(PreSharpInputs);@(BuiltProjectOutputGroupDependency->'%(FullPath)')">
-            <Output TaskParameter="Value" PropertyName="PreSharpInputs"/>
+            <Output TaskParameter="Value" PropertyName="PreSharpInputs" />
         </CreateProperty>
     </Target>
 
@@ -65,26 +66,33 @@
                            DependencyPaths="@(BuiltProjectOutputGroupDependency)"
                            InPlaceFiles="@(PreSharpInPlace)"
                            TemplateFiles="@(PreSharpTemplate)"
-                           TemplateLibraryFiles="@(PreSharpTemplateLibrary)">
+                           TemplateIncludeFiles="@(PreSharpTemplateInclude)"
+                           TemplateLibraryFiles="@(PreSharpTemplateLibrary)"
+                           OutputDirectory="$(OutDir)"
+                           ProjectPath="$(ProjectPath)">                        
             <Output TaskParameter="FilesToDelete" ItemName="FilesToDelete" />
+            <Output TaskParameter="CompileGeneratedFiles" ItemName="CompileGeneratedFiles" />
+            <Output TaskParameter="EmbeddedResourceGeneratedFiles" ItemName="EmbeddedResourceGeneratedFiles" />
         </PreSharpBuildTask>
-        <Delete Files="@(FilesToDelete)"/>
+        <WriteLinesToFile File="PreSharp.CompileGeneratedFiles.cache" Lines="@(CompileGeneratedFiles)" Overwrite="true" />
+        <WriteLinesToFile File="PreSharp.EmbeddedResourceGeneratedFiles.cache" Lines="@(EmbeddedResourceGeneratedFiles)" Overwrite="true" />
+        <Delete Files="@(FilesToDelete)" />
     </Target>
 
     <Target Name="PreSharpAddCompileGeneratedFilesTarget">
-        <PreSharpAddCompileGeneratedFilesTask>
-            <Output TaskParameter="CompileGeneratedFiles" ItemName="Compile" />
-        </PreSharpAddCompileGeneratedFilesTask>
+        <ReadLinesFromFile File="PreSharp.CompileGeneratedFiles.cache">
+            <Output TaskParameter="Lines" ItemName="Compile" />
+        </ReadLinesFromFile>
     </Target>
 
     <Target Name="PreSharpAddEmbeddedResourceGeneratedFilesTarget">
-        <PreSharpAddEmbeddedResourceGeneratedFilesTask>
-            <Output TaskParameter="EmbeddedResourceGeneratedFiles" ItemName="EmbeddedResource" />
-        </PreSharpAddEmbeddedResourceGeneratedFilesTask>
+        <ReadLinesFromFile File="PreSharp.EmbeddedResourceGeneratedFiles.cache">
+            <Output TaskParameter="Lines" ItemName="EmbeddedResource" />
+        </ReadLinesFromFile>
     </Target>
 
     <Target Name="PreSharpCleanTarget">
-        <Delete Files="PreSharp.CompileGeneratedFiles.cache;PreSharp.EmbeddedResourceGeneratedFiles.cache;@(PreSharpTemplate->'%(FullPath).PreSharpDebug.cs');@(PreSharpTemplateLibrary->'%(FullPath).PreSharpDebug.cs')"/>
+        <Delete Files="PreSharp.CompileGeneratedFiles.cache;PreSharp.EmbeddedResourceGeneratedFiles.cache;@(PreSharpTemplate->'%(FullPath).PreSharpDebug.cs');@(PreSharpTemplateLibrary->'%(FullPath).PreSharpDebug.cs')" />
     </Target>
 
 </Project>
