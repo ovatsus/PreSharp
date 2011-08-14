@@ -66,8 +66,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PreSharpAddCompileGeneratedFilesTask.cs" />
     <Compile Include="PreSharp.cs" />
-    <Compile Include="PreSharpAddOutputsTask.cs" />
+    <Compile Include="PreSharpAddEmbeddedResourceGeneratedFilesTask.cs" />
     <Compile Include="PreSharpGenerator.GenerateTemplateLibraryAssembly.cs" />
     <Compile Include="PreSharpGenerator.ProcessTemplateFile.cs" />
     <Compile Include="PreSharpGenerator.RegionProcessing.cs" />
@@ -93,7 +94,8 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>$(TargetPath)</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
     <PreBuildEvent>
     </PreBuildEvent>
   </PropertyGroup>

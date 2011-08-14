@@ -72,7 +72,7 @@ partial class PreSharpGenerator {
                 }
             }
             if (assembly == null) {
-                logger.LogWarning(templateFile, null, "Could not find assembly '" + assemblyName + "'.", 0, 0);
+                logger.LogError(templateFile, null, "Could not find assembly '" + assemblyName + "'.", 0, 0);
             } else {
                 references.Add(assembly.Location);
             }

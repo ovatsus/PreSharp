@@ -24,27 +24,14 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 [LoadInSeparateAppDomain]
-public class PreSharpAddOutputsTask : AppDomainIsolatedTask {
-
-    [Output]
-    public ITaskItem[] CompileGeneratedFiles { get; set; }
+public class PreSharpAddEmbeddedResourceGeneratedFilesTask : AppDomainIsolatedTask {
 
     [Output]
     public ITaskItem[] EmbeddedResourceGeneratedFiles { get; set; }
 
-    [Output]
-    public ITaskItem[] FilesToDelete { get; set; }
-
     public override bool Execute() {
 
         TaskLogger logger = new TaskLogger(this);
-
-        if (File.Exists("PreSharp.CompileGeneratedFiles.cache")) {
-            CompileGeneratedFiles = File.ReadAllLines("PreSharp.CompileGeneratedFiles.cache").Select(file => new TaskItem(file)).ToArray();
-            foreach (var file in CompileGeneratedFiles) {
-                logger.LogMessage("File '" + file + "' was added to compile list");
-            }
-        }
 
         if (File.Exists("PreSharp.EmbeddedResourceGeneratedFiles.cache")) {
             EmbeddedResourceGeneratedFiles = File.ReadAllLines("PreSharp.EmbeddedResourceGeneratedFiles.cache").Select(file => new TaskItem(file)).ToArray();
