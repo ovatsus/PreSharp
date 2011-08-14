@@ -15,13 +15,15 @@
         </AvailableItemName>
     </ItemGroup>
 
-    <UsingTask TaskName="PreSharp.Task" AssemblyFile="$(ProgramFiles)\PreSharp\PreSharp.exe" Condition=" '$(DISABLE_PRESHARP)' == '' " />
+    <UsingTask TaskName="PreSharpBuildTask" AssemblyFile="$(ProgramFiles)\PreSharp\PreSharp.exe" Condition=" '$(DISABLE_PRESHARP)' == '' " />
+    <UsingTask TaskName="PreSharpAddOutputsTask" AssemblyFile="$(ProgramFiles)\PreSharp\PreSharp.exe" Condition=" '$(DISABLE_PRESHARP)' == '' " />
 
     <PropertyGroup Condition=" '$(DISABLE_PRESHARP)' == '' ">
-        <BuildDependsOn>
+        <CoreCompileDependsOn>
             PreSharpBuildTarget;
-            $(BuildDependsOn)
-        </BuildDependsOn>
+            PreSharpAddOutputsTarget;
+            $(CoreCompileDependsOn)
+        </CoreCompileDependsOn>
     </PropertyGroup>
 
     <PropertyGroup Condition=" '$(DISABLE_PRESHARP)' == '' ">
@@ -44,22 +46,29 @@
     <Target Name="PreSharpBuildTarget"
             DependsOnTargets="PreSharpCalculateInputsTarget;BuiltProjectOutputGroupDependencies"
             Inputs="$(PreSharpInputs)"
-            Outputs="PreSharp.timestamp"            
+            Outputs="PreSharp.CompileGeneratedFiles.cache;PreSharp.EmbeddedResourceGeneratedFiles.cache"            
             Condition=" '$(DISABLE_PRESHARP)' == '' ">
-        <PreSharp.Task DefineConstants="$(DefineConstants)"
-                       DependencyPaths="@(BuiltProjectOutputGroupDependency)"
-                       InPlaceFiles="@(PreSharpInPlace)"
-                       TemplateFiles="@(PreSharpTemplate)"
-                       TemplateLibraryFiles="@(PreSharpTemplateLibrary)">
-            <Output TaskParameter="FilesToCompile" ItemName="Compile" />
-            <Output TaskParameter="FilesToCleanup" ItemName="FilesToCleanup" />
-        </PreSharp.Task>
-        <Delete Files="@(FilesToCleanup)"/>
+        <PreSharpBuildTask ConditionalCompilationSymbols="$(DefineConstants)"
+                           DependencyPaths="@(BuiltProjectOutputGroupDependency)"
+                           InPlaceFiles="@(PreSharpInPlace)"
+                           TemplateFiles="@(PreSharpTemplate)"
+                           TemplateLibraryFiles="@(PreSharpTemplateLibrary)">
+            <Output TaskParameter="FilesToDelete" ItemName="FilesToDelete" />
+        </PreSharpBuildTask>
+        <Delete Files="@(FilesToDelete)"/>
+    </Target>
+
+    <Target Name="PreSharpAddOutputsTarget"
+            DependsOnTargets="PreSharpBuildTarget" 
+            Condition=" '$(DISABLE_PRESHARP)' == '' ">
+        <PreSharpAddOutputsTask>
+            <Output TaskParameter="CompileGeneratedFiles" ItemName="Compile" />
+            <Output TaskParameter="EmbeddedResourceGeneratedFiles" ItemName="EmbeddedResource" />
+        </PreSharpAddOutputsTask>
     </Target>
 
     <Target Name="PreSharpCleanTarget">
-        <Delete Files="PreSharp.timestamp"/>
-        <Delete Files="@(PreSharpTemplate->'%(FullPath).PreSharpDebug.cs');@(PreSharpTemplateLibrary->'%(FullPath).PreSharpDebug.cs')"/>
+        <Delete Files="PreSharp.CompileGeneratedFiles.cache;PreSharp.EmbeddedResourceGeneratedFiles.cache;@(PreSharpTemplate->'%(FullPath).PreSharpDebug.cs');@(PreSharpTemplateLibrary->'%(FullPath).PreSharpDebug.cs')"/>
     </Target>
 
 </Project>

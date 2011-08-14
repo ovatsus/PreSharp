@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{47E85B57-70FE-49DC-8807-22BED8A999DB}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -66,15 +66,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="PreSharp.cs" />
+    <Compile Include="PreSharpAddOutputsTask.cs" />
+    <Compile Include="PreSharpGenerator.GenerateTemplateLibraryAssembly.cs" />
+    <Compile Include="PreSharpGenerator.ProcessTemplateFile.cs" />
+    <Compile Include="PreSharpGenerator.RegionProcessing.cs" />
     <Compile Include="TaskLogger.cs" />
     <Compile Include="CommandLineLogger.cs" />
     <Compile Include="PreSharpGenerator.cs" />
-    <Compile Include="Logger.cs">
-    </Compile>
-    <Compile Include="Utils.cs" />
-    <Compile Include="Program.cs" />
+    <Compile Include="Logger.cs" />
+    <Compile Include="PreSharpEntryPoint.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Task.cs" />
+    <Compile Include="PreSharpBuildTask.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\PreSharp.snk" />
