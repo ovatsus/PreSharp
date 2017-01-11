@@ -76,7 +76,7 @@
         </PreSharpBuildTask>
         <WriteLinesToFile File="PreSharp.CompileGeneratedFiles.cache" Lines="@(CompileGeneratedFiles)" Overwrite="true" />
         <WriteLinesToFile File="PreSharp.EmbeddedResourceGeneratedFiles.cache" Lines="@(EmbeddedResourceGeneratedFiles)" Overwrite="true" />
-        <Delete Files="@(FilesToDelete)" />
+        <Delete Files="@(FilesToDelete)" TreatErrorsAsWarnings="true"/>
     </Target>
 
     <Target Name="PreSharpAddCompileGeneratedFilesTarget">
