@@ -50,4 +50,9 @@ internal static class AssemblyUtils {
     public static Version GetCLRVersion(Type type) {
         return new Version(Assembly.GetAssembly(type).ImageRuntimeVersion.TrimStart('v'));
     }
+
+    public static bool IsRunningAt32Bit() {
+        //easiest most performant way to detect
+        return IntPtr.Size == 4;
+    }
 }

@@ -36,4 +36,8 @@ public static class PreSharp {
         }
         HasOutputs = true;
     }
+
+    public static void Install() {
+        PreSharpEntryPoint.Install();
+    }
 }
